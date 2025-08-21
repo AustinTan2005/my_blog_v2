@@ -1,0 +1,11 @@
+.image-tooltip {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 9999;
+}
