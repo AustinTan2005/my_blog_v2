@@ -67,7 +67,7 @@ function StoryPage() {
     }, []);
 
     const ArcDivider = ({ title }: { title: string }) => (
-        <div className="flex items-center gap-4 py-4 px-2">
+        <div className="flex items-center gap-4 py-4 px-2 mt-2">
             <div className="flex-1 h-px bg-gray-500" />
             <span className="text-gray-300 text-sm font-semibold tracking-widest uppercase whitespace-nowrap">
                 {title}
