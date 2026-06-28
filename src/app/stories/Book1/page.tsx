@@ -2,7 +2,6 @@
 
 import NavBar from "@/components/NavBar";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface Chapter {
     chapter: number;
@@ -11,10 +10,21 @@ interface Chapter {
     link: string;
 }
 
+interface ArcHeader {
+    type: "arc";
+    title: string;
+}
+
+interface ChapterEntry {
+    type: "chapter";
+    data: Chapter;
+}
+
+type Entry = ArcHeader | ChapterEntry;
+
 function StoryPage() {
-    const router = useRouter();
-    const bookID = "Book1"; // Static book ID
-    const [chapters, setChapters] = useState<Chapter[]>([]);
+    const bookID = "Book1";
+    const [entries, setEntries] = useState<Entry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -25,28 +35,26 @@ function StoryPage() {
 
             try {
                 const res = await fetch(`/${bookID}.txt`);
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
                 const text = await res.text();
-                console.log("Raw text:", text);
 
-                const parsed = text
+                const parsed: Entry[] = text
                     .split("\n")
                     .map((line) => line.trim())
                     .filter(Boolean)
                     .map((line) => {
+                        if (line.startsWith("ARC|")) {
+                            return { type: "arc", title: line.split("|")[1] } as ArcHeader;
+                        }
                         const [chapter, title, date, link] = line.split("|");
                         return {
-                            chapter: Number(chapter),
-                            title,
-                            date,
-                            link,
-                        };
+                            type: "chapter",
+                            data: { chapter: Number(chapter), title, date, link },
+                        } as ChapterEntry;
                     });
 
-                setChapters(parsed);
+                setEntries(parsed);
             } catch (err) {
                 console.error("Failed to load chapter list:", err);
                 setError("Failed to load chapters");
@@ -58,13 +66,20 @@ function StoryPage() {
         fetchChapters();
     }, []);
 
+    const ArcDivider = ({ title }: { title: string }) => (
+        <div className="flex items-center gap-4 py-4 px-2">
+            <div className="flex-1 h-px bg-gray-500" />
+            <span className="text-gray-300 text-sm font-semibold tracking-widest uppercase whitespace-nowrap">
+                {title}
+            </span>
+            <div className="flex-1 h-px bg-gray-500" />
+        </div>
+    );
+
     const ChapterRow = ({ chapter, title, date, link }: Chapter) => (
         <div
             className="w-full p-4 flex border-b border-gray-600 hover:text-gray-400 hover:underline cursor-pointer transition-colors"
-            onClick={() => {
-                // Open the external link directly
-                window.open(link, '_blank');
-            }}
+            onClick={() => window.open(link, "_blank")}
         >
             <div className="flex-grow">
                 Chapter {chapter} - {title}
@@ -108,14 +123,18 @@ function StoryPage() {
                                 <p>{error}</p>
                                 <small>Make sure {bookID}.txt exists in the public folder</small>
                             </div>
-                        ) : chapters.length === 0 ? (
+                        ) : entries.length === 0 ? (
                             <div className="text-center p-4">
                                 <p>No chapters found</p>
                             </div>
                         ) : (
-                            chapters.map((chapterData) => (
-                                <ChapterRow key={chapterData.chapter} {...chapterData} />
-                            ))
+                            entries.map((entry, idx) =>
+                                entry.type === "arc" ? (
+                                    <ArcDivider key={`arc-${idx}`} title={entry.title} />
+                                ) : (
+                                    <ChapterRow key={entry.data.chapter} {...entry.data} />
+                                )
+                            )
                         )}
                     </div>
                 </div>
