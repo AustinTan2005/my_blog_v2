@@ -82,7 +82,7 @@ function StoryPage() {
             onClick={() => window.open(link, "_blank")}
         >
             <div className="flex-grow">
-                Chapter {chapter} - {title}
+                Chapter {chapter}{title ? ` - ${title}` : ""}
             </div>
             <div className="text-right">{date}</div>
         </div>
